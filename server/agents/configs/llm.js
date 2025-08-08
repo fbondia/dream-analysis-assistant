@@ -5,7 +5,7 @@ import { salvar_sonho } from "../tools/store.js";
 
 const MODEL = process.env.MODEL || 'gpt-5-nano';
 
-export const llm = new ChatOpenAI({ model:MODEL, temperature:1, maxTokens:300 });
+export const llm = new ChatOpenAI({ model:MODEL, temperature:1/*, maxTokens:300*/ });
 export const availableTools = [buscar_sonhos, salvar_sonho]
 
 export function lastMessage(state, type) {
