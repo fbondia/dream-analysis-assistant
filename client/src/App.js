@@ -1,12 +1,13 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import ChatPage from './ChatPage';
-import LoginPage from './LoginPage';
-import RegisterPage from './RegisterPage';
-import { AuthProvider } from './AuthContext';
-import PrivateRoute from './PrivateRoute';
+
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+import ChatPage from './pages/ChatPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 const darkTheme = createTheme({
   palette: {
@@ -31,5 +32,11 @@ function App() {
     </ThemeProvider>
   );
 }
+
+const PrivateRoute = ({ children }) => {
+  const { currentUser } = useAuth();
+
+  return currentUser ? children : <Navigate to="/login" />;
+};
 
 export default App;

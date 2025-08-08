@@ -1,4 +1,4 @@
-import admin from '../firebase.js';
+import admin from '../lib/firebase.js';
 
 export async function authenticateFirebaseToken(req, res, next) {
   const authHeader = req.headers.authorization;

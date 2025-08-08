@@ -4,15 +4,11 @@ import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages
 
 import { authenticateFirebaseToken } from "../middlewares/authenticate.js"
 
-import { buildContextBlock } from "../prompts/context-builder.js"
-import { jungPrompt } from "../prompts/junguian.js"
-import { narrativePrompt } from "../prompts/narrative.js"
-import { cognitivePrompt } from "../prompts/cognitive.js"
+import { COGNITIVE_PROMPT, JUNG_PROMPT, NARRATIVE_PROMPT, buildContextBlock } from '../agents/prompts.js';
 
-import { app } from '../workflow.js';
+import { llm } from '../agents/llm.js';
+import { app } from '../agents/workflow.js';
 
-const MODEL = process.env.MODEL || 'gpt-4.1-mini';
-const llm = new ChatOpenAI({ model: MODEL, temperature: 0.2 });
 
 export default function registerChatStreamEndpoint(server) {
   server.post('/chat/stream', authenticateFirebaseToken, async (req, res) => {
@@ -92,9 +88,9 @@ export default function registerChatStreamEndpoint(server) {
 
       if ((result.persona || persona) === 'ensemble') {
         // 1) stream das três
-        const p1 = await streamPrompt(jungPrompt(userText, ctxBlock), 'jung');
-        const p2 = await streamPrompt(narrativePrompt(userText, ctxBlock), 'narrative');
-        const p3 = await streamPrompt(cognitivePrompt(userText, ctxBlock), 'cognitive');
+        const p1 = await streamPrompt(JUNG_PROMPT.format({ text:userText, other:ctxBlock }), 'jung');
+        const p2 = await streamPrompt(NARRATIVE_PROMPT.format({ text:userText, other:ctxBlock }), 'narrative');
+        const p3 = await streamPrompt(COGNITIVE_PROMPT.format({ text:userText, other:ctxBlock }), 'cognitive');
 
         // 2) síntese
         send({ event: 'persona', persona: 'synthesis' });
@@ -111,10 +107,19 @@ Responda de forma concisa e estruturada.`),
         await streamPrompt(synthPrompt, 'synthesis');
         send({ event: 'done' });
         return res.end();
-      } else {
+      } 
+      else {
         const chosen = result.persona || persona || 'jung';
-        const promptBy = { jung: jungPrompt, narrative: narrativePrompt, cognitive: cognitivePrompt }[chosen];
-        await streamPrompt(promptBy(userText, ctxBlock), chosen);
+
+        const promptBy = {
+          jung: JUNG_PROMPT,
+          narrative: NARRATIVE_PROMPT,
+          cognitive: COGNITIVE_PROMPT,
+        }[chosen];
+  
+        const formatted = await promptBy.format({ text:userText, other:ctxBlock });
+  
+        await streamPrompt([new SystemMessage(formatted)], chosen);
         send({ event: 'done' });
         return res.end();
       }

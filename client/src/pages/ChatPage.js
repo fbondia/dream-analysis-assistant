@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getAuth } from "firebase/auth";
+
 import { Box, Container, Paper, TextField, Button, CircularProgress, List } from "@mui/material";
 import { Send } from "@mui/icons-material";
 
-import MessageBubble from './MessageBubble';
 import Header from './Header';
-import { getAuth } from "firebase/auth";
+import MessageBubble from '../components/MessageBubble';
 
 const STORAGE_KEY = "chat.react.singlepage.messages";
 
+const greetings = "Oi!";
+
 export default function ChatPage() {
+
+  const [mode, setMode] = useState("specific")
+  const [persona, setPersona] = useState("jung")
+
   const [messages, setMessages] = useState(() => {
-    const greetings = "Oi!";
+    
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [
@@ -67,7 +74,9 @@ export default function ChatPage() {
       },
       body: JSON.stringify({
         threadId,
-        messages: [{ role: 'user', content: text }]
+        mode,
+        persona,
+        text
       })
     });
     if (!resp.ok) {
@@ -88,15 +97,13 @@ export default function ChatPage() {
   }
 
   function clearChat() {
-    setMessages([
-      { id: crypto.randomUUID(), role: "assistant", content: "Chat limpo. Podemos recomeçar!", createdAt: new Date().toISOString() }
-    ]);
+    setMessages([{ id: crypto.randomUUID(), role: "assistant", content: greetings, createdAt: new Date().toISOString() }]);
     inputRef.current?.focus();
   }
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <Header onClearChat={clearChat} />
+      <Header onClearChat={clearChat} mode={mode} persona={persona} onChangeMode={setMode} onChangePersona={setPersona} />
       
       <Container maxWidth="md" sx={{ flexGrow: 1, py: 2, display: "flex", flexDirection: "column" }}>
         <Paper ref={listRef} variant="outlined" sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>

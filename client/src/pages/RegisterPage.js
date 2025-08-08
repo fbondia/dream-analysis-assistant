@@ -1,46 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Box, AppBar, Toolbar, Typography, Container, TextField, Button, CircularProgress, Typography as MuiTypography } from "@mui/material";
+import { auth } from '../services/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Container, TextField, Button, CircularProgress, Link } from "@mui/material";
-import { signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 
-import { auth, googleProvider } from './firebase';
-
-const LoginPage = () => {
+const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigate('/');
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       setLoading(false);
-    } 
-    catch (error) {
-      setError(error.message);
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-      setLoading(false);
-    } 
-    catch (error) {
+      navigate('/'); // Redireciona para a página principal após registro
+    } catch (error) {
       setError(error.message);
       setLoading(false);
     }
@@ -51,7 +29,7 @@ const LoginPage = () => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Login
+            Register
           </Typography>
         </Toolbar>
       </AppBar>
@@ -59,9 +37,9 @@ const LoginPage = () => {
       <Container maxWidth="md" sx={{ flexGrow: 1, py: 2, display: "flex", flexDirection: "column" }}>
         <Box>
           <Typography variant="h5" gutterBottom>
-            Login
+            Create an Account
           </Typography>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleRegister}>
             <TextField
               label="Email"
               type="email"
@@ -81,31 +59,21 @@ const LoginPage = () => {
               margin="normal"
             />
             <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
-              {loading ? <CircularProgress size={24} /> : 'Login'}
+              {loading ? <CircularProgress size={24} /> : 'Register'}
             </Button>
             {error && (
-              <Typography color="error" variant="body2" align="center" marginTop={2}>
+              <MuiTypography color="error" variant="body2" align="center" marginTop={2}>
                 {error}
-              </Typography>
+              </MuiTypography>
             )}
           </form>
-          <Button
-            variant="outlined"
-            color="secondary"
-            fullWidth
-            onClick={handleGoogleLogin}
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Login with Google'}
-          </Button>
 
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="body2">
-              Don’t have an account?{' '}
-              <Link href="/register" underline="hover" color="primary">
-                Register here
-              </Link>
+              Already have an account?{' '}
+              <MuiTypography component="a" href="/login" underline="hover" color="primary">
+                Login here
+              </MuiTypography>
             </Typography>
           </Box>
         </Box>
@@ -114,4 +82,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

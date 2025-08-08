@@ -1,21 +1,30 @@
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { searchDreams } from "../database.js";
+import { AIMessage, FunctionMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 
-export async function searchNode(state) {
+import { availableTools, llm } from "./llm.js";
+import { searchDreams } from "../lib/vectordb.js";
 
-  const qPrompt = [
-    new SystemMessage(`Gere uma query curta para buscar sonhos similares. Responda apenas a query.`),
-    new HumanMessage(state._userText || ''),
-  ];
-  const q = (await llm.invoke(qPrompt)).content;
-  const hits = await searchDreams({ query: q, k: 3 });
-  const out = hits.length
-    ? hits.map((h, i) => `#${i + 1} (${h.date || 's/ data'}; id=${h.id || 'n/a'})
-${h.text.slice(0, 400)}${h.text.length > 400 ? '…' : ''}`).join(`
+const agent = async (state) => {
 
-`)
-    : 'Nenhum similar encontrado.';
-  return { messages: [new AIMessage(`🔎 Similares
+    const prompt = [
+      new SystemMessage(`Gere uma query curta para buscar sonhos similares. Responda apenas a query.`),
+      new HumanMessage(state.text || ''),
+    ];
 
-${out}`)] };
+    const response = await llm.invoke(prompt);
+    
+    const hits = await searchDreams({ query: response.content, k: 3 });
+
+
+    let out = ""
+
+    if (hits?.length===0) {
+      return { next:"end", messages: [...state.messages, new AIMessage("Nenhum sonho sobre isso foi encontrado...")] };
+    }
+
+    out = hits.map((h, i) => `#${i + 1} (${h.date || 's/ data'}; id=${h.id || 'n/a'})\n${h.text}`).join(`\n\n`)
+
+    return { next:"end", messages: [...state.messages, new AIMessage(out)] };
+
 }
+
+export default agent;
