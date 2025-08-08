@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatOpenAI } from "@langchain/openai";
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 
+import { authenticateFirebaseToken } from "../middlewares/authenticate.js"
+
 import { buildContextBlock } from "../prompts/context-builder.js"
 import { jungPrompt } from "../prompts/junguian.js"
 import { narrativePrompt } from "../prompts/narrative.js"
@@ -14,9 +16,15 @@ const llm = new ChatOpenAI({ model: MODEL, temperature: 0.2 });
 
 export default function registerChatEndpoint(server) {
 
-  server.post('/chat', async (req, res) => {
+  server.post('/chat', authenticateFirebaseToken, async (req, res) => {
     try {
-      const { messages = [], threadId, mode, persona } = req.body || {};
+
+      const user = req.user;
+    
+      const { messages = [], /*threadId,*/ mode, persona } = req.body || {};
+
+      // por enquanto um usuário não pode ter conversas separadas
+      const threadId = user.uid
 
       const mapped = messages.map((m) => {
         if (m.role === 'system') return new SystemMessage(m.content);

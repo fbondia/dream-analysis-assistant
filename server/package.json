@@ -9,6 +9,7 @@
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "firebase-admin": "^12.7.0",
     "langchain": "^0.3.30",
     "uuid": "^11.1.0",
     "zod": "^3.23.8"

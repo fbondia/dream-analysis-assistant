@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatOpenAI } from "@langchain/openai";
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 
+import { authenticateFirebaseToken } from "../middlewares/authenticate.js"
+
 import { buildContextBlock } from "../prompts/context-builder.js"
 import { jungPrompt } from "../prompts/junguian.js"
 import { narrativePrompt } from "../prompts/narrative.js"
@@ -13,9 +15,15 @@ const MODEL = process.env.MODEL || 'gpt-4.1-mini';
 const llm = new ChatOpenAI({ model: MODEL, temperature: 0.2 });
 
 export default function registerChatStreamEndpoint(server) {
-  server.post('/chat/stream', async (req, res) => {
+  server.post('/chat/stream', authenticateFirebaseToken, async (req, res) => {
     try {
-      const { messages = [], threadId, mode, persona } = req.body || {};
+
+      const user = req.user;
+    
+      const { messages = [], /*threadId,*/ mode, persona } = req.body || {};
+
+      // por enquanto um usuário não pode ter conversas separadas
+      const threadId = user.uid
 
       // SSE headers
       res.setHeader('Content-Type', 'text/event-stream');

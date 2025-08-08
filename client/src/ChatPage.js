@@ -4,6 +4,7 @@ import { Send } from "@mui/icons-material";
 
 import MessageBubble from './MessageBubble';
 import Header from './Header';
+import { getAuth } from "firebase/auth";
 
 const STORAGE_KEY = "chat.react.singlepage.messages";
 
@@ -51,10 +52,19 @@ export default function ChatPage() {
   }
 
   async function assistantReply(text) {
-    const threadId = localStorage.getItem('demo.threadId') || '';
-    const resp = await fetch('http://localhost:3031/chat', {
+
+    const auth = getAuth();
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    const threadId = auth.currentUser.uid;
+
+    const resp = await fetch(`${process.env.REACT_APP_SERVER_URL}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${idToken}`
+      },
       body: JSON.stringify({
         threadId,
         messages: [{ role: 'user', content: text }]
@@ -65,8 +75,9 @@ export default function ChatPage() {
       throw new Error(err.error || `HTTP ${resp.status}`);
     }
     const data = await resp.json();
-    if (data.threadId) localStorage.setItem('demo.threadId', data.threadId);
+
     return data.message?.content || '(sem resposta)';
+    
   }
 
   function handleKeyDown(e) {
