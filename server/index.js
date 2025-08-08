@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
 import { z } from 'zod';
 import dayjs from 'dayjs';
 import fs from 'fs/promises';
@@ -107,11 +108,11 @@ async function searchDreams({ query, k = 3 }) {
 // ===== Estado do grafo (modo JSON) =====
 const GraphAnnotation = Annotation.Root({
   ...MessagesAnnotation.spec,
-  intent: Annotation().optional(),
-  action: Annotation().optional(),
-  mode: Annotation().optional(),        // 'auto' | 'specific' | 'ensemble'
-  persona: Annotation().optional(),     // 'jung' | 'narrative' | 'cognitive'
-  contextDocs: Annotation().optional(), // resultados de busca
+  intent: Annotation(),
+  action: Annotation(),
+  mode: Annotation(),        // 'auto' | 'specific' | 'ensemble'
+  persona: Annotation(),     // 'jung' | 'narrative' | 'cognitive'
+  contextDocs: Annotation(), // resultados de busca
 });
 
 function lastUser(state) {
@@ -264,6 +265,20 @@ const app = graph.compile({ checkpointer: memory });
 
 // ===== HTTP =====
 const server = express();
+
+// CORS Configuration
+if (process.env.CORS_DISABLED !== 'true') {
+  const corsOptions = {
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  };
+  server.use(cors(corsOptions));
+  console.log('CORS enabled.');
+} else {
+  console.log('CORS disabled by environment variable.');
+}
+
 server.use(express.json());
 
 // Resposta única (JSON), útil para fallback sem streaming

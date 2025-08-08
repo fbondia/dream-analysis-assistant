@@ -60,7 +60,7 @@ export default function ChatPage() {
 
   async function assistantReply(text) {
     const threadId = localStorage.getItem('demo.threadId') || '';
-    const resp = await fetch('http://localhost:3030/chat', {
+    const resp = await fetch('http://localhost:3031/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
