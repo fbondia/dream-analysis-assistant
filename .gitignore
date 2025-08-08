@@ -24,3 +24,4 @@ yarn-error.log*
 client/node_modules
 server/node_modules
 somnar-ef4d6-firebase-adminsdk-1v9o9-a87275d15c.json
+server/data

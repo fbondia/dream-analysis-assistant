@@ -1,13 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { createSystemPrompt, DREAM_PROMPT } from "./prompts.js";
 import { llm } from "./llm.js";
 
 const agent = async (state) => {
   
-  //if (state.messages?.length>0) {
-  //  return { messages: [...state.messages, new HumanMessage(state.text)] }
-  //}
-
   const prompt = `Você é um roteador de decisões em um chatbot de análise de sonhos. 
 - Se um usuário relata um sonho você responde: RELATO
 - Se um usuário pede para pesquisar ou buscar um sonho você responde: PESQUISA
@@ -35,18 +30,6 @@ Responda apenas RELATO, PESQUISA ou CONVERSA. Nenhuma informação adicional.`
     console.log(response.content)
     return { next:"end", messages: [...state.messages, response] };
   }
-
-  /*
-  const initial = await createSystemPrompt({
-    text: state.text,
-    mode: state.mode,
-    persona: state.persona
-  })
-
-  const dreamPrompt = await DREAM_PROMPT.format({text:state.text, other:''})
-
-  return { messages: [...initial.messages, dreamPrompt] }
-  */
 
 };
 
