@@ -1,42 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, SmartToy, Person, Delete, Brightness4, Brightness7 } from "@mui/icons-material";
-import { Box, AppBar, Toolbar, Typography, IconButton, Container, Paper, List, ListItem, ListItemAvatar, Avatar, ListItemText, TextField, Button, CircularProgress } from "@mui/material";
+import { Box, Container, Paper, TextField, Button, CircularProgress, List } from "@mui/material";
+import { Send } from "@mui/icons-material";
 
-// Message shape
-function nowISO() {
-  return new Date().toISOString();
-}
-
-function fmtTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
+import MessageBubble from './MessageBubble';
+import Header from './Header';
 
 const STORAGE_KEY = "chat.react.singlepage.messages";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState(() => {
+    const greetings = "Oi!";
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [
-        { id: crypto.randomUUID(), role: "assistant", content: "Oi! Eu sou seu chat local. Sem servidores, só front-end. Manda uma mensagem pra começar.", createdAt: nowISO() }
+        { id: crypto.randomUUID(), role: "assistant", content:greetings, createdAt: new Date().toISOString() }
       ];
     } catch {
       return [
-        { id: crypto.randomUUID(), role: "assistant", content: "Oi! Eu sou seu chat local. Sem servidores, só front-end. Manda uma mensagem pra começar.", createdAt: nowISO() }
+        { id: crypto.randomUUID(), role: "assistant", content:greetings, createdAt: new Date().toISOString() }
       ];
     }
   });
+  
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-
+  
   const listRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Persist messages
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    // Scroll to bottom when messages change
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
@@ -48,34 +41,23 @@ export default function ChatPage() {
     const text = input.trim();
     setInput("");
 
-    const userMsg = { id: crypto.randomUUID(), role: "user", content: text, createdAt: nowISO() };
+    const userMsg = { id: crypto.randomUUID(), role: "user", content: text, createdAt: new Date().toISOString() };
     setMessages((m) => [...m, userMsg]);
 
-    // Fake assistant thinking
     setIsTyping(true);
     const reply = await assistantReply(text);
     setIsTyping(false);
-    setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: reply, createdAt: nowISO() }]);
+    setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: reply, createdAt: new Date().toISOString() }]);
   }
 
   async function assistantReply(text) {
-
-
-    // messages = [], 
-    // threadId, 
-    // mode = // 'auto' | 'specific' | 'ensemble'
-    // persona =  // 'jung' | 'narrative' | 'cognitive'
-
     const threadId = localStorage.getItem('demo.threadId') || '';
     const resp = await fetch('http://localhost:3031/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         threadId,
-        messages: [
-          // opcional: você pode enviar o histórico completo "messages" daqui do front
-          { role: 'user', content: text }
-        ]
+        messages: [{ role: 'user', content: text }]
       })
     });
     if (!resp.ok) {
@@ -87,31 +69,6 @@ export default function ChatPage() {
     return data.message?.content || '(sem resposta)';
   }
 
-
-  // Simple local assistant — replace with your API call
-  function fakeAssistantReply(text) {
-    return new Promise((resolve) => {
-      const delay = Math.min(1800 + Math.random() * 1200, 3200);
-      setTimeout(() => {
-        // Toy logic: answer with a tiny helpful vibe
-        let answer = "";
-        const lower = text.toLowerCase();
-        if (/^\s*(oi|ol[aá]|hey|eai|fala|bom\s*dia|boa\s*tarde|boa\s*noite)\b/.test(lower)) {
-          answer = "Olá! Como posso te ajudar hoje?";
-        } else if (/\?$/.test(text)) {
-          answer = "Boa pergunta! Aqui é só um demo local, mas posso te responder de forma genérica: experimente detalhar mais o contexto que eu tento ajudar.";
-        } else if (lower.includes("limpar")) {
-          answer = "Se quiser limpar o histórico, clique no ícone de lixeira no topo à direita.";
-        } else {
-          // Slightly transform the input so it's not a raw echo
-          const trimmed = text.length > 280 ? text.slice(0, 280) + "…" : text;
-          answer = `Entendi: "${trimmed}". (Dica: conecte este componente a uma API para respostas reais.)`;
-        }
-        resolve(answer);
-      }, delay);
-    });
-  }
-
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -121,25 +78,15 @@ export default function ChatPage() {
 
   function clearChat() {
     setMessages([
-      { id: crypto.randomUUID(), role: "assistant", content: "Chat limpo. Podemos recomeçar!", createdAt: nowISO() }
+      { id: crypto.randomUUID(), role: "assistant", content: "Chat limpo. Podemos recomeçar!", createdAt: new Date().toISOString() }
     ]);
     inputRef.current?.focus();
   }
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <AppBar position="static">
-        <Toolbar>
-          <SmartToy sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Chat (página única)
-          </Typography>
-          <IconButton color="inherit" onClick={clearChat} title="Limpar chat">
-            <Delete />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-
+      <Header onClearChat={clearChat} />
+      
       <Container maxWidth="md" sx={{ flexGrow: 1, py: 2, display: "flex", flexDirection: "column" }}>
         <Paper ref={listRef} variant="outlined" sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
           <List>
@@ -149,7 +96,7 @@ export default function ChatPage() {
               </MessageBubble>
             ))}
             {isTyping && (
-              <MessageBubble role="assistant" time={nowISO()}>
+              <MessageBubble role="assistant" time={new Date().toISOString()}>
                 <CircularProgress size={20} />
               </MessageBubble>
             )}
@@ -177,25 +124,7 @@ export default function ChatPage() {
             Enviar
           </Button>
         </Box>
-
       </Container>
     </Box>
-  );
-}
-
-function MessageBubble({ role, time, children }) {
-  const isUser = role === "user";
-  return (
-    <ListItem sx={{ flexDirection: isUser ? "row-reverse" : "row", alignItems: "flex-start", mb: 1 }}>
-      <ListItemAvatar sx={{ minWidth: "auto", ml: isUser ? 1 : 0, mr: isUser ? 0 : 1 }}>
-        <Avatar sx={{ bgcolor: isUser ? "primary.main" : "grey.300", color: isUser ? "primary.contrastText" : "text.primary" }}>
-          {isUser ? <Person /> : <SmartToy />}
-        </Avatar>
-      </ListItemAvatar>
-      <Paper elevation={1} sx={{ p: 1.5, borderRadius: 2, bgcolor: isUser ? "primary.main" : "background.paper", color: isUser ? "primary.contrastText" : "text.primary", maxWidth: "80%" }}>
-        <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>{children}</Typography>
-        <Typography variant="caption" sx={{ display: "block", textAlign: "right", mt: 0.5 }}>{fmtTime(time)}</Typography>
-      </Paper>
-    </ListItem>
   );
 }
