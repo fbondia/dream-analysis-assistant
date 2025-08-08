@@ -1,6 +1,6 @@
 import { AIMessage, FunctionMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 
-import { availableTools, llm } from "./llm.js";
+import { availableTools, llm } from "./configs/llm.js";
 import { searchDreams } from "../lib/vectordb.js";
 
 const agent = async (state) => {
@@ -12,16 +12,21 @@ const agent = async (state) => {
 
     const response = await llm.invoke(prompt);
     
-    const hits = await searchDreams({ query: response.content, k: 3 });
+    const filter = (doc) => {
+      return doc.metadata.uid===state.session.userId;
+    }
 
-
-    let out = ""
+    const hits = await searchDreams({ query: response.content, filter, k: 3 });
 
     if (hits?.length===0) {
       return { next:"end", messages: [...state.messages, new AIMessage("Nenhum sonho sobre isso foi encontrado...")] };
     }
 
-    out = hits.map((h, i) => `#${i + 1} (${h.date || 's/ data'}; id=${h.id || 'n/a'})\n${h.text}`).join(`\n\n`)
+    const out = hits.map((h, i) => `#${i+1} [${h.date}] = ${h.title}
+
+${h.text}`).join(`
+
+`)
 
     return { next:"end", messages: [...state.messages, new AIMessage(out)] };
 

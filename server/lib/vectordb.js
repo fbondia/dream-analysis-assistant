@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Document } from '@langchain/core/documents';
 
 // ===== infra =====
@@ -29,35 +30,28 @@ const embeddings = new OpenAIEmbeddings({ model: EMBED_MODEL });
 
 let vectorStore;
 
+async function splitText(text) {
+
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 200,
+    chunkOverlap: 50,
+    separators: ['\n\n', '.', '\n', ' '],
+  });
+
+  const chunks = await splitter.splitText(text);
+
+  return chunks;
+
+}
+
 async function loadVectorStore() {
 
   try {
     vectorStore = await HNSWLib.load(INDEX_DIR, embeddings);
     console.log('Vector store loaded.');
   } 
-  catch (e) {
-    
+  catch (e) {    
     console.log('Index not found. Trying to build from dreams.json...');
-    
-    const dreams = await readDreams();
-    
-    if (dreams.length > 0) {
-      console.log(`Found ${dreams.length} dreams. Building index...`);
-      const dreamDocs = dreams.map(
-        (d) =>
-          new Document({
-            pageContent: d.text,
-            metadata: { id: d.id, date: d.date },
-          })
-      );
-      vectorStore = await HNSWLib.fromDocuments(dreamDocs, embeddings);
-      await vectorStore.save(INDEX_DIR);
-      console.log('Index built and saved.');
-    } 
-    else {
-      console.log('No dreams found in dreams.json. Vector store will be created on first addition.');
-    }
-
   }
 
 }
@@ -70,32 +64,38 @@ async function writeDreams(arr) {
   await fs.writeFile(DREAMS_JSON, JSON.stringify(arr, null, 2));
 }
 
-export async function storeDream({ text, date }) {
+export async function storeDream({ text, title, date, uid }) {
 
   const dreams = await readDreams();
   const id = uuidv4();
 
   const record = {
     id,
+    title,
     text,
     date: date || dayjs().format('YYYY-MM-DD'),
     createdAt: new Date().toISOString(),
+    uid
   };
 
   dreams.push(record);
   
   await writeDreams(dreams);
 
-  const doc = new Document({
-    pageContent: text,
-    metadata: { id, date: record.date },
-  });
+  const chunks = await splitText(text);
+
+  const docs = chunks.map((chunk, index) => 
+    new Document({
+      pageContent: chunk,
+      metadata: { id, title:record.title, uid:record.uid, date:record.date, chunkIndex:index },
+    })
+  );
 
   if (vectorStore) {
-    await vectorStore.addDocuments([doc]);
+    await vectorStore.addDocuments(docs);
   } 
   else {
-    vectorStore = await HNSWLib.fromDocuments([doc], embeddings);
+    vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
   }
 
   await vectorStore.save(INDEX_DIR);
@@ -104,16 +104,37 @@ export async function storeDream({ text, date }) {
 
 }
 
-export async function searchDreams({ query, k = 3 }) {
+export async function searchDreams({ query, filter, k = 3 }) {
   
   if (!vectorStore) {
     return [];
   }
 
-  const results = await vectorStore.similaritySearch(query, k);
-  
-  return results.map((r) => ({ text: r.pageContent, ...r.metadata }));
+  // Realiza a busca com o vetor
+  const results = await vectorStore.similaritySearch(query, k, filter);
 
+  // Agrupa os chunks de volta para formar o texto completo
+  const aggregatedResults = results.reduce((acc, r) => {
+    if (!acc[r.metadata.id]) {
+      acc[r.metadata.id] = { 
+        text: '', 
+        chunks: [],
+        metadata: { ...r.metadata }
+      };
+    }
+    acc[r.metadata.id].chunks.push(r.pageContent);
+    return acc;
+  }, {});
+
+  // Organiza os resultados finais
+  return Object.values(aggregatedResults).map((r) => ({
+    text: "[...] " + r.chunks.join(`
+      
+[...] 
+
+`) + " [...]", // Junta os chunks
+    ...r.metadata,
+  }));
 }
 
 await loadVectorStore();

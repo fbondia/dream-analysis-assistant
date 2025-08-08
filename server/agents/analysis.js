@@ -1,8 +1,7 @@
 import { AIMessage, FunctionMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 
-import { availableTools, llm } from "./llm.js";
-import { searchDreams } from "../lib/vectordb.js";
-import { createSystemPrompt, DREAM_PROMPT } from "./prompts.js";
+import { llm } from "./configs/llm.js";
+import { createSystemPrompt, DREAM_PROMPT } from "./configs/prompts.js";
 
 const agent = async (state) => {
 
@@ -12,9 +11,9 @@ const agent = async (state) => {
 
   const userPrompt = await DREAM_PROMPT.format({text:state.text, other:context})
 
-  const response = await llm.invoke([...systemPrompt, userPrompt])
+  const response = await llm.invoke([...systemPrompt.messages, userPrompt])
 
-  return { next:"end", messages: [...state.messages, response] };
+  return { next:"end", messages: [...systemPrompt.messages, userPrompt, response] };
 
 }
 

@@ -1,9 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-
 import { authenticateFirebaseToken } from "../middlewares/authenticate.js";
 import { app } from '../agents/workflow.js';
-import { lastAIMessage } from '../agents/llm.js';
+import { lastAIMessage } from '../agents/configs/llm.js';
 
 export default function registerChatEndpoint(server) {
   server.post('/chat', authenticateFirebaseToken, async (req, res) => {
@@ -51,10 +49,10 @@ export default function registerChatEndpoint(server) {
 
       
       // Apenas devolve o que o app gerou
-      const lastAssistant = lastAIMessage(result)
+      const reply = lastAIMessage(result)
 
       return res.json({
-        message: { role: 'assistant', content: lastAssistant?.content ?? '' },
+        message: { role: 'assistant', content: reply || '' },
         persona: result.persona || persona || 'auto',
         mode: result.mode || mode || 'auto',
       });

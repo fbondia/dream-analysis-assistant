@@ -4,9 +4,8 @@ import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages
 
 import { authenticateFirebaseToken } from "../middlewares/authenticate.js"
 
-import { COGNITIVE_PROMPT, JUNG_PROMPT, NARRATIVE_PROMPT, buildContextBlock } from '../agents/prompts.js';
-
-import { llm } from '../agents/llm.js';
+import { llm } from '../agents/configs/llm.js';
+import { COGNITIVE_PROMPT, JUNG_PROMPT, NARRATIVE_PROMPT, buildContextBlock } from '../agents/configs/prompts.js';
 import { app } from '../agents/workflow.js';
 
 

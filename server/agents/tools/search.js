@@ -20,7 +20,8 @@ export const [buscar_sonhos, buscar_sonhos_eval] = createManagedTool({
   }),
   fn: async (data, context) => {
 
-    const results = await searchDreams(data.texto, 5)
+    const filter = (doc) => doc.metadata.uid===state.session.userId;
+    const results = await searchDreams(data.texto, filter, 5)
 
     return results;
     
