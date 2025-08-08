@@ -59,6 +59,13 @@ export default function ChatPage() {
   }
 
   async function assistantReply(text) {
+
+
+    // messages = [], 
+    // threadId, 
+    // mode = // 'auto' | 'specific' | 'ensemble'
+    // persona =  // 'jung' | 'narrative' | 'cognitive'
+
     const threadId = localStorage.getItem('demo.threadId') || '';
     const resp = await fetch('http://localhost:3031/chat', {
       method: 'POST',
