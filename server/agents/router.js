@@ -6,7 +6,7 @@ const agent = async (state) => {
   const prompt = `A seguir você é um roteador de decisões em um chatbot de análise de sonhos. 
 - Se o usuário relata um sonho você responde: RELATO
 - Se o usuário pede para listar, pesquisar ou buscar algum sonho anterior você responde: PESQUISA
-- Se o usuário está explicando, respondendo ou complementando a mensagem anterior, você responde: RESPOSTA
+- Se o usuário está explicando, respondendo ou complementando algum item da mensagem anterior, você responde: RESPOSTA
 - Se o usuário fala alguma outra coisa você responde: CONVERSA
   
 Responda apenas RELATO, PESQUISA, RESPOSTA ou CONVERSA. Nenhuma informação adicional.`
