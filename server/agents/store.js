@@ -9,6 +9,9 @@ import dayjs from "dayjs";
 
 const agent = async (state) => {
 
+  return { next:"retriever" };
+
+  /*
   const prompt = [
       new SystemMessage(`Extraia JSON do pedido do usuário. Campos: title, text, date (opcional AAAA-MM-DD), tags (opcional array). 
 Se o titulo ou as tags não estiverem explícitos no texto, gere a partir do conteúdo enviado. 
@@ -23,9 +26,11 @@ Responda APENAS JSON.`),
     tags: z.array(z.string()).default([]).describe("Palavras chave"),
   })).invoke(prompt);
 
+  // apenas parsear - o usuario decidirá se quer armazenar ou não
   const added = await storeDream({...parsed, uid:state.session.userId});
   
   return { next:"retriever", added, messages: [...state.messages] };
+  */
 
 }
 

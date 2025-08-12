@@ -8,9 +8,9 @@ import { searchDreams, storeDream } from "../lib/vectordb.js";
 const agent = async (state) => {
 
   const filter = (doc) => doc.metadata.uid===state.session.userId && doc.metadata.id!==state.added.id;
-  const docs = await searchDreams({ query:state.text, filter, k: 3 });
+  const docs = []//await searchDreams({ query:state.text, filter, k: 3 });
   
-  return { next:"analysis", context: docs };
+  return { next:"analysis", docs };
 
 }
 

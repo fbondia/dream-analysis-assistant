@@ -4,6 +4,7 @@ import HorizontalList from "./Views/HorizontalList";
 import CenteredMessage from "./Views/CenteredMessage";
 import InfoCard from "./Views/InfoCard";
 import EditForm from "./Views/EditForm";
+import Analysis from "./Views/Analysis";
 
 /** =========================
  *  SidePanel com “Conteúdo” plugável
@@ -20,6 +21,11 @@ export default function SidePanel({ contextData }) {
     }
 
     switch (contextData.type) {
+
+      case "analysis": {
+        return <Analysis context={contextData} />
+      }
+
       case "list": {
         // payload esperado:
         // { root: { title, items: [{ id, label, subtitle?, onClick?, children? }] }, onLeafClick? }

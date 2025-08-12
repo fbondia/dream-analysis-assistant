@@ -28,6 +28,8 @@ ${h.text}`).join(`
 
 `)
 
+    // abre lista de sonhos enccontrados - mostrar a similaridade
+
     return { next:"end", messages: [...state.messages, new AIMessage(out)] };
 
 }

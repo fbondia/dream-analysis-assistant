@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ListItem, ListItemAvatar, Avatar, Paper, Typography, IconButton, Tooltip } from "@mui/material";
 import { Person, SmartToy, ContentCopy } from "@mui/icons-material";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function nowISO() {
   return new Date().toISOString();
@@ -11,7 +13,7 @@ function fmtTime(iso) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function MessageBubble({ role, time, children }) {
+export default function MessageBubble({ role, time, children }) {
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
 
@@ -67,7 +69,7 @@ function MessageBubble({ role, time, children }) {
           </IconButton>
         </Tooltip>
         <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
-          {children}
+          <MaybeMarkdown>{children}</MaybeMarkdown>
         </Typography>
         <Typography variant="caption" sx={{ display: "block", textAlign: "right", mt: 0.5 }}>
           {fmtTime(time)}
@@ -77,4 +79,14 @@ function MessageBubble({ role, time, children }) {
   );
 }
 
-export default MessageBubble;
+function MaybeMarkdown({ children }) {
+  if (typeof children === 'string') {
+    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>;
+  }
+  // se vier array de strings, também dá pra aceitar:
+  if (Array.isArray(children) && children.every(c => typeof c === 'string' || typeof c === 'number')) {
+    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children.join('')}</ReactMarkdown>;
+  }
+  // qualquer outra coisa (elementos React, null, etc.)
+  return <>{children}</>;
+}

@@ -3,6 +3,9 @@ import { llm } from "./configs/llm.js";
 
 const agent = async (state) => {
   
+  return { next:"store" };
+
+  /*
   const prompt = `A seguir você é um roteador de decisões em um chatbot de análise de sonhos. 
 - Se o usuário relata um sonho você responde: RELATO
 - Se o usuário pede para listar, pesquisar ou buscar algum sonho anterior você responde: PESQUISA
@@ -49,6 +52,7 @@ Responda apenas RELATO, PESQUISA, RESPOSTA ou CONVERSA. Nenhuma informação adi
     const response = await llm.invoke(newMessages)
     return { next:"end", messages: [...newMessages, response] };
   }
+  */
 
 };
 

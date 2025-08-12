@@ -5,7 +5,7 @@ import searchNode from './search.js';
 import storeNode from './store.js';
 import retrieverNode from './retriever.js';
 import analysisNode from './analysis.js';
-
+import hitlNode from "./hitl.js"
 
 const GraphAnnotation = Annotation.Root({
   ...MessagesAnnotation.spec,
@@ -14,6 +14,8 @@ const GraphAnnotation = Annotation.Root({
   mode: Annotation(),
   persona: Annotation(),
   added: Annotation(),
+  docs: Annotation(),
+  
   context: Annotation(),
 
   next: Annotation(),
@@ -27,6 +29,8 @@ const workflow = new StateGraph(GraphAnnotation)
   .addNode("store", storeNode)
   .addNode("retriever", retrieverNode)
   .addNode("analysis", analysisNode)
+  .addNode("hitl", hitlNode)
+
   .addEdge(START, "router")
   
   .addConditionalEdges('router', (state)=>state.next, {
@@ -35,8 +39,18 @@ const workflow = new StateGraph(GraphAnnotation)
       end: END
     }
   )
+
   .addEdge("store", "retriever")
   .addEdge("retriever", "analysis")
+  .addEdge("analysis", "hitl")
+  
+  .addConditionalEdges('hitl', (state)=>state.next, {
+      analysis: 'analysis',
+      end: END
+    }
+
+  )
+
 
 const memory = new MemorySaver();
 
