@@ -14,29 +14,29 @@ import { InfoOutlined, ChevronRight } from "@mui/icons-material";
 
 /**
  * Componente compacto para uso dentro de um MessageBubble.
- * - Mostra etapa, observações e perguntas em listas densas.
+ * - Mostra etapa, observações e questions em listas densas.
  * - Opções como botões; a "proxima_etapa_sugerida" ganha destaque.
  *
  * Props:
  *  - context: {
- *      etapa_atual: string,
- *      observacoes: string[],
- *      perguntas: string[],
- *      opcoes: { label: string, value?: string, id?: string }[],
- *      meta?: { proxima_etapa_sugerida?: string }
+ *      current_step: string,
+ *      next_step: string,
+ *      insights: string[],
+ *      questions: string[],
+ *      options: { label: string, value?: string, id?: string }[]
  *    }
  *  - onSelectOption?: (option) => void
  */
 export default function Analysis({ context = {}, onSelectOption = () => {} }) {
   const {
-    etapa_atual = "Etapa",
-    observacoes = [],
-    perguntas = [],
-    opcoes = [],
-    meta = {},
+    current_step = "Etapa",
+    next_step = "",
+    insights = [],
+    questions = [],
+    options = []
   } = context || {};
 
-  const sugerida = meta?.proxima_etapa_sugerida;
+  const sugerida = next_step;
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -46,15 +46,15 @@ export default function Analysis({ context = {}, onSelectOption = () => {} }) {
           <Typography variant="overline" color="text.secondary">
             O que estamos analisando agora:
           </Typography>
-          <Chip size="small" label={etapa_atual} />
+          <Chip size="small" label={current_step} />
         </Stack>
 
         {/* Observações */}
-        {!!observacoes.length && (
+        {!!insights.length && (
           <>
             <Typography variant="subtitle2">O que pude perceber:</Typography>
             <List dense disablePadding>
-              {observacoes.map((txt, i) => (
+              {insights.map((txt, i) => (
                 <ListItem key={`obs-${i}`}>
                   <ListItemIcon sx={{ minWidth: 24 }}>
                     <InfoOutlined fontSize="small" />
@@ -66,12 +66,12 @@ export default function Analysis({ context = {}, onSelectOption = () => {} }) {
           </>
         )}
 
-        {/* Perguntas */}
-        {!!perguntas.length && (
+        {/* questions */}
+        {(questions?.length>0 && (!(questions.length===1 && questions[0]===""))) && (
           <>
             <Typography variant="subtitle2">Alguns questionamentos que poderiam enriquecer a análise:</Typography>
             <List dense disablePadding>
-              {perguntas.map((q, i) => (
+              {questions.map((q, i) => (
                 <ListItem key={`q-${i}`} disableGutters sx={{ py: 0.25 }}>
                   <ListItemIcon sx={{ minWidth: 24 }}>
                     <ChevronRight fontSize="small" />
@@ -84,11 +84,11 @@ export default function Analysis({ context = {}, onSelectOption = () => {} }) {
         )}
 
         {/* Opções como botões */}
-        {!!opcoes.length && (
+        {!!options.length && (
           <>
             <Divider />
             <Stack direction="row" flexWrap="wrap" gap={1}>
-              {opcoes.map((opt, i) => {
+              {options.map((opt, i) => {
                 const isPrimary =
                   opt.label === sugerida ||
                   opt.value === sugerida ||
@@ -106,6 +106,7 @@ export default function Analysis({ context = {}, onSelectOption = () => {} }) {
                 );
               })}
             </Stack>
+
             {sugerida && (
               <Typography variant="caption" color="text.secondary">
                 Sugestão do assistente: <strong>{sugerida}</strong>

@@ -19,31 +19,17 @@ export default async function agent(state) {
   ]
 
   const llmStructured = llm.withStructuredOutput(z.object({
-    etapa_atual: z.enum(steps),
     
-    // Resposta pronta em Markdown conforme teu guia (título, observações, perguntas)
+    current_step: z.enum(steps),
+    next_step: z.enum(steps).nullable().optional(),
     markdown: z.string(),
-
-    // Estruturado (útil pra UI)
-    observacoes: z.array(z.string()).default([]),
-    perguntas: z.array(z.string()).min(1).max(3),
-
-    // Sinaliza se deve incluir a frase “Quer avançar para a próxima etapa?”
-    pedir_confirmacao: z.boolean().default(false),
-
-    // Opções de próxima ação (pra tua UI renderizar botões/menus)
-    opcoes: z.array(z.object({
-      value: z.string(), // id/ação (ex.: "coletar_espacos")
-      label: z.string()  // rótulo visível (ex.: "Começar pelos espaços")
+    insights: z.array(z.string()).default([]),
+    questions: z.array(z.string()).min(1).max(3),
+    should_confirm: z.boolean().default(false),
+    options: z.array(z.object({
+      value: z.string(),
+      label: z.string()
     })).default([]),
-
-    // Ecoa o campo de entrada se quiser manter no ciclo
-    similares: z.string().default("nenhum"),
-
-    // Campo livre pra telemetria/controle
-    meta: z.object({
-      proxima_etapa_sugerida: z.enum(steps).nullable().optional()
-    }).nullable().optional()
   }));
 
   const json = await llmStructured.invoke(messages);
@@ -82,33 +68,25 @@ REGRAS:
 - Se faltar contexto, faça uma pergunta única e clara.
 
 FORMATO VISUAL (dentro do campo "markdown"):
-- Título: "## Etapa {etapa_atual}"
+- Título: "## Etapa {current_step}"
 - Subtítulo "### Observações" + bullets concisos (se houver).
-- Subtítulo "### Perguntas" + perguntas numeradas (1–3).
-- Quando fizer sentido, inclua ao final: "Quer avançar para a próxima etapa?"
+- Subtítulo "### Associações" + associações coletadas do usuário até o momento.
 
 ETAPAS (guia de condução):
-1 — Presença do sonhador (difere da vida acordada?)
-2 — Inventário de elementos (coletar aos poucos: espaços, atores, ações, elementos)
+1 — Presença do sonhador (como o sonhador difere de quem é em sua vida acordada?)
+2 — Inventário de elementos (coletar aos poucos: espaços, ambientes, atores, personages, ações, gestos, elementos, objetos símbolos)
 3 — Qualidades de cada elemento (1–3 por vez)
 4 — Emoções do sonho (rascunho e ajuste)
 5 — Temas possíveis (1–3 temas)
-6 — Amplificações arquetípicas (1–2, leves)
+6 — Possíveis amplificações arquetípicas (1–3, leves)
 7 — Sonhos similares (se SIMILARES ≠ "nenhum")
 
 SAÍDA (OBRIGATÓRIA):
-- Responda com **apenas um objeto JSON** válido que siga o schema DreamAnalysisResponse.
+- Responda com **apenas um objeto JSON** válido que siga o schema fornecido.
 - Preencha "markdown" com o texto completo em Markdown no formato visual descrito.
-- Preencha "opcoes" com próximas ações adequadas à etapa (ex.: "coletar_espacos", "coletar_atores", "aprofundar_elemento", "escolher_temas", "encerrar_sintese").
-- Se sugerir avançar de etapa, marque "pedir_confirmacao": true e, opcionalmente, "meta.proxima_etapa_sugerida".
+- Preencha "options" com próximas ações adequadas à etapa (ex.: "Analisar espaços no sonho", "Analisar atores e personagens", "Aprofundar análise dos elementos simbólicos", "Analisar temas", "Finalizar análise").
+- Se sugerir avançar de etapa, marque "should_confirm": true e, opcionalmente, "next_step".
 `
-
-const varsEntrada = `
-VARIÁVEIS DE ENTRADA:
-- Etapa atual: {ETAPA_ATUAL}
-- SIMILARES: {SIMILARES}  (ex.: "nenhum" ou breve resumo)
-- Contexto já respondido (resumo curto): {HISTORICO}
-- Texto do sonhador (última mensagem): {TEXTO}`
 
 const dream_prompt = new PromptTemplate({
   inputVariables: ["text", "other"],

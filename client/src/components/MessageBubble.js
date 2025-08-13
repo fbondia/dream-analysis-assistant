@@ -4,19 +4,20 @@ import { Person, SmartToy, ContentCopy } from "@mui/icons-material";
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import ContextViewer from "../pages/Views/ContextViewer";
 
 function fmtTime(iso) {
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function MessageBubble({ role, time, children }) {
+export default function MessageBubble({ role, time, contextData, isLastMessage, children }) {
 
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(children).then(() => {
+    navigator.clipboard.writeText(children?.content || children).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
@@ -68,9 +69,7 @@ export default function MessageBubble({ role, time, children }) {
           </IconButton>
         </Tooltip>
 
-        <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
-          <MaybeMarkdown>{children}</MaybeMarkdown>
-        </Typography>
+        <MaybeMarkdown contextData={contextData} isLastMessage={isLastMessage}>{children}</MaybeMarkdown>
 
         {time &&
           <Typography variant="caption" sx={{ display: "block", textAlign: "right", mt: 0.5 }}>
@@ -82,14 +81,29 @@ export default function MessageBubble({ role, time, children }) {
   );
 }
 
-function MaybeMarkdown({ children }) {
+function MaybeMarkdown({ contextData, isLastMessage, children }) {
+
+  if (isLastMessage && contextData && children.role !== 'user') {
+    return <ContextViewer contextData={contextData} />
+  }
 
   if (typeof children === 'string') {
-    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>;
+    return (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
+    )
   }
+  
+  if (typeof children.content === 'string') {
+    return (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{children.content}</ReactMarkdown>
+    )
+  }
+
   // se vier array de strings, também dá pra aceitar:
   if (Array.isArray(children) && children.every(c => typeof c === 'string' || typeof c === 'number')) {
-    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children.join('')}</ReactMarkdown>;
+    return (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{children.join('')}</ReactMarkdown>
+    )
   }
 
   // qualquer outra coisa (elementos React, null, etc.)

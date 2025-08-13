@@ -117,17 +117,11 @@ export default function ChatPage() {
           <Paper ref={listRef} variant="outlined" sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
             <List>
               
-              {messages.map((m,i) => (i===0 || i+1<messages.length) && (
-                <MessageBubble key={m.id} role={m.role} time={m.createdAt}>
-                  {m.content}
+              {messages.map((m,i) => (
+                <MessageBubble key={m.id} role={m.role} time={m.createdAt} contextData={contextData} isLastMessage={i+1===messages.length}>
+                  {m}
                 </MessageBubble>
               ))}
-
-              {contextData &&
-                <MessageBubble role={"context"}>
-                  <ContextViewer contextData={contextData} />
-                </MessageBubble>
-              }
 
               {isTyping && (
                 <MessageBubble role="assistant" time={new Date().toISOString()}>
