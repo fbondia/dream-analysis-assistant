@@ -1,16 +1,13 @@
 import { AIMessage, FunctionMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { llm } from "./configs/llm.js";
-import { ANALYSIS_PROMPT, createSystemPrompt, DREAM_PROMPT } from "./configs/prompts.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export default async function agent(state) {
 
   let messages = (state.messages?.length > 0 ? state.messages : await initializePrompt(state))
 
-  //const response = await llm.invoke(messages)
-
-  const llmStructured = llm.withStructuredOutput(z.object({
-    etapa_atual: z.enum([
+  const steps = [
       "1_presenca",
       "2_inventario",
       "3_qualidades",
@@ -19,7 +16,10 @@ export default async function agent(state) {
       "6_amplificacoes",
       "7_similares",
       "encerramento"
-    ]),
+  ]
+
+  const llmStructured = llm.withStructuredOutput(z.object({
+    etapa_atual: z.enum(steps),
     
     // Resposta pronta em Markdown conforme teu guia (título, observações, perguntas)
     markdown: z.string(),
@@ -42,23 +42,13 @@ export default async function agent(state) {
 
     // Campo livre pra telemetria/controle
     meta: z.object({
-      proxima_etapa_sugerida: z.enum([
-        "1_presenca",
-        "2_inventario",
-        "3_qualidades",
-        "4_emocoes",
-        "5_temas",
-        "6_amplificacoes",
-        "7_similares",
-        "encerramento"
-      ]).nullable().optional()
+      proxima_etapa_sugerida: z.enum(steps).nullable().optional()
     }).nullable().optional()
   }));
+
   const json = await llmStructured.invoke(messages);
 
   const response = new AIMessage({content:json.markdown})
-
-  console.log(response)
 
   return { next:"hitl", messages:[...messages, response], context:{type:"analysis", ...json} };
 
@@ -66,17 +56,20 @@ export default async function agent(state) {
 
 const initializePrompt = async (state) => {
 
-    const systemPrompt = new SystemMessage(await ANALYSIS_PROMPT.format({ prompt_persona }))
+    const systemPrompt = new SystemMessage(system_prompt)
 
     const other = state.docs?.map((h, i) => `#${i + 1} (${h.date || 's/ data'}; id=${h.id || 'n/a'})\n${h.text}`).join(`\n\n`)
 
-    const userPrompt = await DREAM_PROMPT.format({text:state.text, other})
+
+    const userPrompt = await dream_prompt.format({text:state.text, other})
 
     return [systemPrompt, userPrompt]
 
 }
 
-const prompt_persona = `Persona: ANALISTA DE SONHOS focado em elementos e seu sentido para o sonhador. Tom: perspicaz, gentil, receptivo e curioso.
+const system_prompt = `Você analisa sonhos de acordo com a metodologia indicada a seguir.
+
+Persona: ANALISTA DE SONHOS focado em elementos e seu sentido para o sonhador. Tom: perspicaz, gentil, receptivo e curioso.
 
 REGRAS:
 - Fale em português do Brasil e formate em Markdown.
@@ -117,3 +110,10 @@ VARIÁVEIS DE ENTRADA:
 - Contexto já respondido (resumo curto): {HISTORICO}
 - Texto do sonhador (última mensagem): {TEXTO}`
 
+const dream_prompt = new PromptTemplate({
+  inputVariables: ["text", "other"],
+  template: `SONHO: {text}
+
+SIMILARES:
+{other}`
+})

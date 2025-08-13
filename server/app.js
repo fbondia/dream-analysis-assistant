@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 
 import registerChatEndpoint from './endpoints/chat.js';
-import registerChatStreamEndpoint from './endpoints/chat_stream.js';
 
 // ===== HTTP =====
 
@@ -26,7 +25,6 @@ else {
 server.use(express.json());
 
 registerChatEndpoint(server);
-registerChatStreamEndpoint(server);
 
 const PORT = process.env.PORT || 3031;
 server.listen(PORT, () => {

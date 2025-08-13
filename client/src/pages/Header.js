@@ -15,7 +15,8 @@ import { SmartToy, Delete, Logout } from "@mui/icons-material";
 import { auth } from '../services/firebase';
 import { signOut } from 'firebase/auth';
 
-function Header({ mode, persona, onChangeMode, onChangePersona, onClearChat }) {
+function Header({ onClearChat }) {
+
   const [userEmail, setUserEmail] = useState(null);
 
   useEffect(() => {
@@ -40,34 +41,6 @@ function Header({ mode, persona, onChangeMode, onChangePersona, onClearChat }) {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel id="mode-label">Modo</InputLabel>
-            <Select
-              labelId="mode-label"
-              value={mode}
-              label="Modo"
-              onChange={(e) => onChangeMode(e.target.value)}
-            >
-              <MenuItem value="auto">Automático</MenuItem>
-              <MenuItem value="specific">Específico</MenuItem>
-              <MenuItem value="ensemble">Misturado</MenuItem>
-            </Select>
-          </FormControl>
-
-          {mode==="specific" &&
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel id="persona-label">Tipo de Análise</InputLabel>
-              <Select
-                labelId="persona-label"
-                value={persona}
-                label="Tipo de Análise"
-                onChange={(e) => onChangePersona(e.target.value)}>
-                <MenuItem value="jung">Junguiana</MenuItem>
-                <MenuItem value="narrative">Análise Narrativa</MenuItem>
-                <MenuItem value="cognitive">Análise Cognitiva</MenuItem>
-              </Select>
-            </FormControl>
-          }
 
           {userEmail && (
             <Typography variant="body2" sx={{ mr: 1 }}>

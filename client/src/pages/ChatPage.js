@@ -6,15 +6,12 @@ import { Send } from "@mui/icons-material";
 import Header from './Header';
 import MessageBubble from '../components/MessageBubble';
 import SidePanel from "./SidePanel";
-import z from "zod";
-import { marked } from "marked";
+import ContextViewer from "./Views/ContextViewer";
 
 const STORAGE_KEY = "chat.react.singlepage.messages";
 const greetings = "Oi!";
 
 export default function ChatPage() {
-  const [mode, setMode] = useState("specific");
-  const [persona, setPersona] = useState("jung");
 
   const [messages, setMessages] = useState(() => {
     try {
@@ -45,6 +42,7 @@ export default function ChatPage() {
   const canSend = input.trim().length > 0 && !isTyping;
 
   async function handleSend() {
+
     if (!canSend) return;
     const text = input.trim();
     setInput("");
@@ -56,18 +54,13 @@ export default function ChatPage() {
     const reply = await assistantReply(text);
     setIsTyping(false);
 
-    //console.log(reply)
-    
     setMessages((m) => [
       ...m,
       { id: crypto.randomUUID(), role: "assistant", content: reply.text, createdAt: new Date().toISOString() }
     ]);
 
-    // Atualiza contexto se vier do servidor
-    if (reply.context) {
-      console.log(reply.context)
-      setContextData(reply.context);
-    }
+    setContextData(reply.context);
+
   }
 
   async function assistantReply(text) {
@@ -81,7 +74,7 @@ export default function ChatPage() {
         'Content-Type': 'application/json',
         "Authorization": `Bearer ${idToken}`
       },
-      body: JSON.stringify({ threadId, mode, persona, text })
+      body: JSON.stringify({ threadId, text })
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
@@ -111,29 +104,30 @@ export default function ChatPage() {
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <Header
-        onClearChat={clearChat}
-        mode={mode}
-        persona={persona}
-        onChangeMode={setMode}
-        onChangePersona={setPersona}
-      />
+      <Header onClearChat={clearChat} />
 
       {/* Layout lado a lado */}
       <Box sx={{ flexGrow: 1, display: "flex", overflow: "hidden" }}>
+        
         {/* Painel de navegação/contexto */}
-        <SidePanel contextData={contextData} />
+        {1===0 && <SidePanel contextData={contextData} />}
 
         {/* Área do chat */}
         <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", p: 2 }}>
           <Paper ref={listRef} variant="outlined" sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
             <List>
               
-              {messages.map((m,i) => (
+              {messages.map((m,i) => (i===0 || i+1<messages.length) && (
                 <MessageBubble key={m.id} role={m.role} time={m.createdAt}>
                   {m.content}
                 </MessageBubble>
               ))}
+
+              {contextData &&
+                <MessageBubble role={"context"}>
+                  <ContextViewer contextData={contextData} />
+                </MessageBubble>
+              }
 
               {isTyping && (
                 <MessageBubble role="assistant" time={new Date().toISOString()}>

@@ -8,7 +8,7 @@ export default function registerChatEndpoint(server) {
   server.post('/chat', authenticateFirebaseToken, async (req, res) => {
     try {
       const user = req.user;
-      const { text, mode, persona } = req.body || {};
+      const { text } = req.body || {};
 
       const threadId = user.uid;
  
@@ -24,8 +24,6 @@ export default function registerChatEndpoint(server) {
       else {
         result = await app.invoke({ 
           text: text,
-          mode: mode || 'auto', 
-          persona,
           session:{userId: user.uid}
         },
         config
@@ -44,9 +42,7 @@ export default function registerChatEndpoint(server) {
 
       return res.json({
         message: { role: 'assistant', content:reply || '' },
-        context: result.context,
-        persona: result.persona || persona || 'auto',
-        mode: result.mode || mode || 'auto',
+        context: result.context
       });
 
     } 

@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { ListItem, ListItemAvatar, Avatar, Paper, Typography, IconButton, Tooltip } from "@mui/material";
 import { Person, SmartToy, ContentCopy } from "@mui/icons-material";
+
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-function nowISO() {
-  return new Date().toISOString();
-}
 
 function fmtTime(iso) {
   const d = new Date(iso);
@@ -14,6 +11,7 @@ function fmtTime(iso) {
 }
 
 export default function MessageBubble({ role, time, children }) {
+
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
 
@@ -42,6 +40,7 @@ export default function MessageBubble({ role, time, children }) {
           {isUser ? <Person /> : <SmartToy />}
         </Avatar>
       </ListItemAvatar>
+
       <Paper
         elevation={1}
         sx={{
@@ -68,18 +67,23 @@ export default function MessageBubble({ role, time, children }) {
             <ContentCopy fontSize="inherit" />
           </IconButton>
         </Tooltip>
+
         <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
           <MaybeMarkdown>{children}</MaybeMarkdown>
         </Typography>
-        <Typography variant="caption" sx={{ display: "block", textAlign: "right", mt: 0.5 }}>
-          {fmtTime(time)}
-        </Typography>
+
+        {time &&
+          <Typography variant="caption" sx={{ display: "block", textAlign: "right", mt: 0.5 }}>
+            {fmtTime(time)}
+          </Typography>
+        }
       </Paper>
     </ListItem>
   );
 }
 
 function MaybeMarkdown({ children }) {
+
   if (typeof children === 'string') {
     return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>;
   }
@@ -87,6 +91,8 @@ function MaybeMarkdown({ children }) {
   if (Array.isArray(children) && children.every(c => typeof c === 'string' || typeof c === 'number')) {
     return <ReactMarkdown remarkPlugins={[remarkGfm]}>{children.join('')}</ReactMarkdown>;
   }
+
   // qualquer outra coisa (elementos React, null, etc.)
   return <>{children}</>;
+
 }
